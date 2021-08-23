@@ -4,16 +4,16 @@
 
 static s32 N(D_80244A20)[112];
 
-Script N(exitWalk_80241830) = EXIT_WALK_SCRIPT(60,  0, "arn_07",  1);
+EvtSource N(exitWalk_80241830) = EXIT_WALK_SCRIPT(60,  0, "arn_07",  1);
 
-Script N(exitWalk_8024188C) = EXIT_WALK_SCRIPT(60,  1, "arn_05",  0);
+EvtSource N(exitWalk_8024188C) = EXIT_WALK_SCRIPT(60,  1, "arn_05",  0);
 
-Script N(802418E8) = SCRIPT({
+EvtSource N(802418E8) = SCRIPT({
     bind N(exitWalk_80241830) TRIGGER_FLOOR_ABOVE 1;
     bind N(exitWalk_8024188C) TRIGGER_FLOOR_ABOVE 5;
 });
 
-Script N(enterWalk_80241930) = SCRIPT({
+EvtSource N(enterWalk_80241930) = SCRIPT({
     GetLoadType(SI_VAR(1));
     if (SI_VAR(1) == 1) {
         spawn EnterSavePoint;
@@ -34,7 +34,7 @@ Script N(enterWalk_80241930) = SCRIPT({
     spawn EnterWalk;
 });
 
-Script N(main) = SCRIPT({
+EvtSource N(main) = SCRIPT({
     SI_WORLD_LOCATION = LOCATION_GUSTY_GULCH;
     SetSpriteShading(-1);
     SetCamPerspective(0, 3, 25, 16, 4096);
@@ -74,7 +74,7 @@ NpcAISettings N(npcAISettings_80241BC0) = {
     .unk_2C = 1,
 };
 
-Script N(npcAI_80241BF0) = SCRIPT({
+EvtSource N(npcAI_80241BF0) = SCRIPT({
     N(func_8024113C_BDFECC)(N(npcAISettings_80241BC0));
 });
 
@@ -91,14 +91,216 @@ NpcSettings N(npcSettings_80241C3C) = {
     .level = 99,
 };
 
-s32** N(D_80241C68_BE09F8) = NULL;
+#include "world/common/UnkNpcAIFunc24.inc.c"
 
-Script N(80241C6C) = SCRIPT({
+#include "world/common/UnkFunc13.inc.c"
+
+#include "world/common/UnkNpcAIFunc1.inc.c"
+
+#include "world/common/UnkFunc14.inc.c"
+
+#include "world/common/UnkNpcAIFunc25.inc.c"
+
+#include "world/common/NpcJumpFunc2.inc.c"
+
+#include "world/common/NpcJumpFunc.inc.c"
+
+#include "world/common/UnkNpcAIFunc13.inc.c"
+
+#include "world/common/UnkFunc15.inc.c"
+
+#include "world/common/UnkNpcDurationFlagFunc.inc.c"
+
+#include "world/common/UnkFunc16.inc.c"
+
+ApiStatus N(func_80240B94_BDF924)(Evt* script, s32 isInitialCall) {
+    Enemy* enemy = script->owner1.enemy;
+    Npc* npc = get_npc_unsafe(enemy->npcID);
+    Bytecode* args = script->ptrReadPos;
+    EnemyTerritoryThing territory;
+    EnemyTerritoryThing* territoryPtr = &territory;
+    NpcAISettings* npcAISettings = (NpcAISettings*)get_variable(script, *args++);
+    f32 posX, posY, posZ, posW;
+
+    territory.unk_00 = 0;
+    territory.shape = enemy->territory->patrol.detectShape;
+    territory.pointX = enemy->territory->patrol.detect.x;
+    territory.pointZ = enemy->territory->patrol.detect.z;
+    territory.sizeX = enemy->territory->patrol.detectSizeX;
+    territory.sizeZ = enemy->territory->patrol.detectSizeZ;
+    territory.unk_18 = 65.0f;
+    territory.unk_1C = 0;
+
+    if (isInitialCall || enemy->unk_B0 & 4) {
+        script->functionTemp[0] = 0;
+        npc->duration = 0;
+        npc->currentAnim.w = enemy->animList[0];
+        npc->flags &= ~0x800;
+        if (!enemy->territory->patrol.isFlying) {
+            npc->flags = (npc->flags | 0x200) & ~8;
+        } else {
+            npc->flags = (npc->flags & ~0x200) | 8;
+        }
+
+        if (enemy->unk_B0 & 4) {
+            script->functionTemp[0] = 99;
+            script->functionTemp[1] = 0;
+            enemy->unk_B0 &= ~4;
+        } else if (enemy->flags & 0x40000000) {
+            script->functionTemp[0] = 12;
+            enemy->flags &= ~0x40000000;
+        }
+
+        posX = npc->pos.x;
+        posY = npc->pos.y + npc->collisionHeight;
+        posZ = npc->pos.z;
+        posW = 100.0f;
+
+        if (npc_raycast_down_sides(npc->unk_80, &posX, &posY, &posZ, &posW)) {
+            npc->pos.y = posY;
+        }
+    }
+
+    switch (script->functionTemp[0]) {
+        case 0:
+            N(UnkNpcAIFunc24)(script, npcAISettings, territoryPtr);
+        case 1:
+            N(UnkFunc13)(script, npcAISettings, territoryPtr);
+            break;
+        case 2:
+            N(UnkNpcAIFunc1)(script, npcAISettings, territoryPtr);
+        case 3:
+            N(UnkFunc14)(script, npcAISettings, territoryPtr);
+            break;
+        case 4:
+            N(UnkNpcAIFunc25)(script, npcAISettings, territoryPtr);
+            break;
+        case 10:
+            N(NpcJumpFunc2)(script, npcAISettings, territoryPtr);
+        case 11:
+            N(NpcJumpFunc)(script, npcAISettings, territoryPtr);
+            break;
+        case 12:
+            N(UnkNpcAIFunc13)(script, npcAISettings, territoryPtr);
+        case 13:
+            N(UnkFunc15)(script, npcAISettings, territoryPtr);
+            break;
+        case 14:
+            N(UnkNpcDurationFlagFunc)(script, npcAISettings, territoryPtr);
+            break;
+        case 15:
+            N(UnkFunc16)(script, npcAISettings, territoryPtr);
+            break;
+        case 99:
+            func_8004A73C(script);
+    }
+    return ApiStatus_BLOCK;
+}
+
+void N(func_80240E90_BDFC20)(Evt* script, NpcAISettings* aiSettings, EnemyTerritoryThing* territory) {
+    Enemy* enemy = script->owner1.enemy;
+    Npc* npc = get_npc_unsafe(enemy->npcID);
+    f32 posX, posY, posZ, posW;
+    f32 temp_f20;
+    f32 temp_f22;
+
+    posX = npc->pos.x;
+    posZ = npc->pos.z;
+    temp_f22 = (*(enemy->territory->patrol.points + script->functionTemp[2])).x;
+    temp_f20 = (*(enemy->territory->patrol.points + script->functionTemp[2])).z;
+
+    npc->yaw = atan2(posX, posZ, temp_f22, temp_f20);
+    npc_move_heading(npc, npc->moveSpeed, npc->yaw);
+
+    posX = npc->pos.x;
+    posY = npc->pos.y + (*(enemy->territory->patrol.points + script->functionTemp[2])).y;
+    posZ = npc->pos.z;
+    posW = 1000.0f;
+    npc_raycast_down_sides(npc->unk_80, &posX, &posY, &posZ, &posW);
+    posY += (*(enemy->territory->patrol.points + script->functionTemp[2])).y;
+    posW = posY - npc->pos.y;
+    if (posW > 2.0) {
+        npc->pos.y += 2.0;
+    } else if (posW < -2.0) {
+        npc->pos.y -= 2.0;
+    } else {
+        npc->pos.y = posY;
+    }
+
+    posW = dist2D(npc->pos.x, npc->pos.z, temp_f22, temp_f20);
+    if (!(posW > npc->moveSpeed)) {
+        script->functionTemp[0] = 2;
+    }
+}
+
+void N(func_80241068_BDFDF8)(Evt* script, NpcAISettings* aiSettings, EnemyTerritoryThing* territory) {
+    Enemy* enemy = script->owner1.enemy;
+    Npc* npc = get_npc_unsafe(enemy->npcID);
+
+    npc->duration--;
+    if (npc->duration < 0) {
+        script->functionTemp[1]--;
+        if (script->functionTemp[1] >= 0) {
+            npc->yaw = clamp_angle(npc->yaw + 180.0f);
+            npc->duration = aiSettings->waitTime / 2 + rand_int(aiSettings->waitTime / 2 + 1);
+        } else {
+            script->functionTemp[0] = 4;
+            npc->currentAnim.w = enemy->animList[0];
+        }
+    }
+}
+
+ApiStatus N(func_8024113C_BDFECC)(Evt* script, s32 isInitialCall) {
+    Enemy* enemy = script->owner1.enemy;
+    Bytecode* args = script->ptrReadPos;
+    Npc* npc = get_npc_unsafe(enemy->npcID);
+    EnemyTerritoryThing territory;
+    EnemyTerritoryThing* territoryPtr = &territory;
+    NpcAISettings* npcAISettings = (NpcAISettings*)get_variable(script, *args++);
+
+    territory.unk_00 = 0;
+    territory.shape = enemy->territory->patrol.detectShape;
+    territory.pointX = enemy->territory->patrol.detect.x;
+    territory.pointZ = enemy->territory->patrol.detect.z;
+    territory.sizeX = enemy->territory->patrol.detectSizeX;
+    territory.sizeZ = enemy->territory->patrol.detectSizeZ;
+    territory.unk_18 = 100.0f;
+    territory.unk_1C = 0;
+
+    if (isInitialCall) {
+        script->functionTemp[0] = 0;
+        npc->duration = 0;
+        npc->flags &= ~0x800;
+    }
+
+    switch (script->functionTemp[0]) {
+        case 0:
+            N(UnkNpcAIFunc24)(script, npcAISettings, territoryPtr);
+        case 1:
+            N(func_80240E90_BDFC20)(script, npcAISettings, territoryPtr);
+            break;
+        case 2:
+            N(UnkNpcAIFunc1)(script, npcAISettings, territoryPtr);
+        case 3:
+            N(func_80241068_BDFDF8)(script, npcAISettings, territoryPtr);
+            break;
+        case 4:
+            N(UnkNpcAIFunc25)(script, npcAISettings, territoryPtr);
+            break;
+    }
+
+    enemy->varTable[0] = npc->pos.y;
+    return ApiStatus_BLOCK;
+}
+
+#include "world/common/StashVars.inc.c"
+
+EvtSource N(80241C6C) = SCRIPT({
     ShowGotItem(SI_VAR(0), 1, 0);
     return;
 });
 
-Script N(80241C9C) = SCRIPT({
+EvtSource N(80241C9C) = SCRIPT({
     ShowGotItem(SI_VAR(0), 1, 16);
     return;
 });
@@ -111,7 +313,7 @@ s32 N(D_80241CD0_BE0A60) = {
     0x00000000,
 };
 
-Script N(80241CD4) = SCRIPT({
+EvtSource N(80241CD4) = SCRIPT({
     SI_VAR(9) = SI_VAR(1);
     ShowKeyChoicePopup();
     SI_VAR(10) = SI_VAR(0);
@@ -135,20 +337,20 @@ Script N(80241CD4) = SCRIPT({
     unbind;
 });
 
-Script N(80241E18) = SCRIPT({
+EvtSource N(80241E18) = SCRIPT({
     N(func_80241680_BE0410)(SI_VAR(0));
     bind_padlock N(80241CD4) 0x10 0 N(D_80244A20);
     N(func_802415F4_BE0384)(SI_VAR(0));
 });
 
-Script N(80241E68) = SCRIPT({
+EvtSource N(80241E68) = SCRIPT({
     SetPlayerAnimation(ANIM_10002);
     sleep 1;
     SetPlayerAnimation(0x80007);
     sleep 20;
 });
 
-Script N(interact_80241EB0) = SCRIPT({
+EvtSource N(interact_80241EB0) = SCRIPT({
     match SI_STORY_PROGRESS {
         < STORY_CH3_TUBBA_CHASED_MARIO_IN_FOYER {
             if (SI_AREA_FLAG(2) == 0) {
@@ -181,7 +383,7 @@ Script N(interact_80241EB0) = SCRIPT({
     }
 });
 
-Script N(idle_80242064) = SCRIPT({
+EvtSource N(idle_80242064) = SCRIPT({
     DisablePlayerInput(TRUE);
     sleep 25;
     spawn {
@@ -245,7 +447,7 @@ Script N(idle_80242064) = SCRIPT({
     PanToTarget(0, 0, 0);
 });
 
-Script N(init_802424E0) = SCRIPT({
+EvtSource N(init_802424E0) = SCRIPT({
     if (SI_STORY_PROGRESS < STORY_CH3_ARRIVED_AT_GHOST_TOWN) {
         SetNpcPos(NPC_SELF, 175, 240, 145);
         BindNpcIdle(NPC_SELF, N(idle_80242064));
@@ -253,7 +455,7 @@ Script N(init_802424E0) = SCRIPT({
     BindNpcInteract(NPC_SELF, N(interact_80241EB0));
 });
 
-Script N(interact_8024254C) = SCRIPT({
+EvtSource N(interact_8024254C) = SCRIPT({
     if (SI_MAP_VAR(0) != 0) {
         if (SI_MAP_VAR(0) >= SI_MAP_VAR(1)) {
             SpeakToPlayer(NPC_SELF, NPC_ANIM(boo, Palette_01, Anim_4), NPC_ANIM(boo, Palette_01, Anim_1), 0, MESSAGE_ID(0x0E,
@@ -319,11 +521,11 @@ Script N(interact_8024254C) = SCRIPT({
     }
 });
 
-Script N(init_802428A8) = SCRIPT({
+EvtSource N(init_802428A8) = SCRIPT({
     BindNpcInteract(NPC_SELF, N(interact_8024254C));
 });
 
-Script N(802428CC) = SCRIPT({
+EvtSource N(802428CC) = SCRIPT({
     GetPlayerPos(SI_VAR(0), SI_VAR(1), SI_VAR(2));
     GetNpcPos(NPC_SELF, SI_VAR(3), SI_VAR(4), SI_VAR(5));
     if (SI_VAR(0) > SI_VAR(3)) {
@@ -339,7 +541,7 @@ Script N(802428CC) = SCRIPT({
     sleep 1;
 });
 
-Script N(802429D4) = SCRIPT({
+EvtSource N(802429D4) = SCRIPT({
     GetPlayerPos(SI_VAR(0), SI_VAR(1), SI_VAR(2));
     GetNpcPos(NPC_SELF, SI_VAR(3), SI_VAR(4), SI_VAR(5));
     if (SI_VAR(0) > SI_VAR(3)) {
@@ -360,7 +562,7 @@ Script N(802429D4) = SCRIPT({
     NpcMoveTo(0x4, SI_VAR(0), SI_VAR(2), 40);
 });
 
-Script N(80242B0C) = SCRIPT({
+EvtSource N(80242B0C) = SCRIPT({
     GetPlayerPos(SI_VAR(0), SI_VAR(1), SI_VAR(2));
     GetNpcPos(NPC_SELF, SI_VAR(3), SI_VAR(4), SI_VAR(5));
     if (SI_VAR(0) > SI_VAR(3)) {
@@ -382,7 +584,7 @@ Script N(80242B0C) = SCRIPT({
     SetNpcPos(0x4, 0, -1000, 0);
 });
 
-Script N(80242C60) = SCRIPT({
+EvtSource N(80242C60) = SCRIPT({
     await N(802429D4);
     SI_MAP_VAR(2) = 0;
     SI_MAP_VAR(3) = 0;
@@ -409,7 +611,7 @@ Script N(80242C60) = SCRIPT({
     sleep 15;
 });
 
-Script N(interact_80242DC4) = SCRIPT({
+EvtSource N(interact_80242DC4) = SCRIPT({
     match SI_STORY_PROGRESS {
         < STORY_CH3_TUBBA_CHASED_MARIO_IN_FOYER {
             if (SI_AREA_FLAG(4) == 0) {
@@ -471,11 +673,11 @@ Script N(interact_80242DC4) = SCRIPT({
     }
 });
 
-Script N(init_802431A4) = SCRIPT({
+EvtSource N(init_802431A4) = SCRIPT({
     BindNpcInteract(NPC_SELF, N(interact_80242DC4));
 });
 
-Script N(interact_802431C8) = SCRIPT({
+EvtSource N(interact_802431C8) = SCRIPT({
     match SI_STORY_PROGRESS {
         < STORY_CH3_TUBBA_CHASED_MARIO_IN_FOYER {
             if (SI_AREA_FLAG(5) == 0) {
@@ -503,11 +705,11 @@ Script N(interact_802431C8) = SCRIPT({
     }
 });
 
-Script N(init_80243328) = SCRIPT({
+EvtSource N(init_80243328) = SCRIPT({
     BindNpcInteract(NPC_SELF, N(interact_802431C8));
 });
 
-Script N(init_8024334C) = SCRIPT({
+EvtSource N(init_8024334C) = SCRIPT({
     SetNpcPos(NPC_SELF, 0, -1000, 0);
 });
 
@@ -667,7 +869,7 @@ StaticNpc N(npcGroup_80243B38) = {
     },
 };
 
-Script N(idle_80243D28) = SCRIPT({
+EvtSource N(idle_80243D28) = SCRIPT({
     GetNpcPos(NPC_SELF, SI_VAR(0), SI_VAR(1), SI_VAR(2));
     SI_VAR(3) = SI_VAR(0);
     SI_VAR(3) += -60;
@@ -689,22 +891,22 @@ Script N(idle_80243D28) = SCRIPT({
     }
 });
 
-Script N(init_80243E90) = SCRIPT({
+EvtSource N(init_80243E90) = SCRIPT({
     BindNpcIdle(NPC_SELF, N(idle_80243D28));
     SetNpcFlagBits(NPC_SELF, NPC_FLAG_HAS_SHADOW, FALSE);
 });
 
-Script N(init_80243ECC) = SCRIPT({
+EvtSource N(init_80243ECC) = SCRIPT({
     BindNpcIdle(NPC_SELF, N(idle_80243D28));
     SetNpcFlagBits(NPC_SELF, NPC_FLAG_HAS_SHADOW, FALSE);
 });
 
-Script N(init_80243F08) = SCRIPT({
+EvtSource N(init_80243F08) = SCRIPT({
     BindNpcIdle(NPC_SELF, N(idle_80243D28));
     SetNpcFlagBits(NPC_SELF, NPC_FLAG_HAS_SHADOW, FALSE);
 });
 
-Script N(init_80243F44) = SCRIPT({
+EvtSource N(init_80243F44) = SCRIPT({
     BindNpcIdle(NPC_SELF, N(idle_80243D28));
     SetNpcFlagBits(NPC_SELF, NPC_FLAG_HAS_SHADOW, FALSE);
 });
@@ -851,232 +1053,11 @@ static s32 N(pad_47DC) = {
     0x00000000,
 };
 
-Script N(makeEntities) = SCRIPT({
+EvtSource N(makeEntities) = SCRIPT({
     MakeEntity(0x802EA564, 300, 237, 60, 0, ITEM_COIN, MAKE_ENTITY_END);
     AssignBlockFlag(SI_SAVE_FLAG(1007));
     MakeEntity(0x802E9A18, 250, 237, 125, 0, MAKE_ENTITY_END);
 });
-
-#include "world/common/UnkNpcAIFunc24.inc.c"
-
-#include "world/common/UnkFunc13.inc.c"
-
-#include "world/common/UnkNpcAIFunc1.inc.c"
-
-#include "world/common/UnkFunc14.inc.c"
-
-#include "world/common/UnkNpcAIFunc25.inc.c"
-
-#include "world/common/NpcJumpFunc2.inc.c"
-
-#include "world/common/NpcJumpFunc.inc.c"
-
-#include "world/common/UnkNpcAIFunc13.inc.c"
-
-#include "world/common/UnkFunc15.inc.c"
-
-#include "world/common/UnkNpcDurationFlagFunc.inc.c"
-
-#include "world/common/UnkFunc16.inc.c"
-
-ApiStatus N(func_80240B94_BDF924)(ScriptInstance* script, s32 isInitialCall) {
-    Enemy* enemy = script->owner1.enemy;
-    Npc* npc = get_npc_unsafe(enemy->npcID);
-    Bytecode* args = script->ptrReadPos;
-    EnemyTerritoryThing territory;
-    EnemyTerritoryThing* territoryPtr = &territory;
-    NpcAISettings* npcAISettings = (NpcAISettings*)get_variable(script, *args++);
-    f32 posX, posY, posZ, posW;
-
-    territory.unk_00 = 0;
-    territory.shape = enemy->territory->patrol.detectShape;
-    territory.pointX = enemy->territory->patrol.detect.x;
-    territory.pointZ = enemy->territory->patrol.detect.z;
-    territory.sizeX = enemy->territory->patrol.detectSizeX;
-    territory.sizeZ = enemy->territory->patrol.detectSizeZ;
-    territory.unk_18 = 65.0f;
-    territory.unk_1C = 0;
-
-    if (isInitialCall || enemy->unk_B0 & 4) {
-        script->functionTemp[0] = 0;
-        npc->duration = 0;
-        npc->currentAnim.w = enemy->animList[0];
-        npc->flags &= ~0x800;
-        if (!enemy->territory->patrol.isFlying) {
-            npc->flags = (npc->flags | 0x200) & ~8;
-        } else {
-            npc->flags = (npc->flags & ~0x200) | 8;
-        }
-
-        if (enemy->unk_B0 & 4) {
-            script->functionTemp[0] = 99;
-            script->functionTemp[1] = 0;
-            enemy->unk_B0 &= ~4;
-        } else if (enemy->flags & 0x40000000) {
-            script->functionTemp[0] = 12;
-            enemy->flags &= ~0x40000000;
-        }
-
-        posX = npc->pos.x;
-        posY = npc->pos.y + npc->collisionHeight;
-        posZ = npc->pos.z;
-        posW = 100.0f;
-
-        if (npc_raycast_down_sides(npc->unk_80, &posX, &posY, &posZ, &posW)) {
-            npc->pos.y = posY;
-        }
-    }
-
-    switch (script->functionTemp[0]) {
-        case 0:
-            N(UnkNpcAIFunc24)(script, npcAISettings, territoryPtr);
-        case 1:
-            N(UnkFunc13)(script, npcAISettings, territoryPtr);
-            break;
-        case 2:
-            N(UnkNpcAIFunc1)(script, npcAISettings, territoryPtr);
-        case 3:
-            N(UnkFunc14)(script, npcAISettings, territoryPtr);
-            break;
-        case 4:
-            N(UnkNpcAIFunc25)(script, npcAISettings, territoryPtr);
-            break;
-        case 10:
-            N(NpcJumpFunc2)(script, npcAISettings, territoryPtr);
-        case 11:
-            N(NpcJumpFunc)(script, npcAISettings, territoryPtr);
-            break;
-        case 12:
-            N(UnkNpcAIFunc13)(script, npcAISettings, territoryPtr);
-        case 13:
-            N(UnkFunc15)(script, npcAISettings, territoryPtr);
-            break;
-        case 14:
-            N(UnkNpcDurationFlagFunc)(script, npcAISettings, territoryPtr);
-            break;
-        case 15:
-            N(UnkFunc16)(script, npcAISettings, territoryPtr);
-            break;
-        case 99:
-            func_8004A73C(script);
-    }
-    return ApiStatus_BLOCK;
-}
-
-void N(func_80240E90_BDFC20)(ScriptInstance* script, NpcAISettings* aiSettings, EnemyTerritoryThing* territory) {
-    Enemy* enemy = script->owner1.enemy;
-    Npc* npc = get_npc_unsafe(enemy->npcID);
-    f32 posX, posY, posZ, posW;
-    f32 temp_f20;
-    f32 temp_f22;
-
-    posX = npc->pos.x;
-    posZ = npc->pos.z;
-    temp_f22 = (*(enemy->territory->patrol.points + script->functionTemp[2])).x;
-    temp_f20 = (*(enemy->territory->patrol.points + script->functionTemp[2])).z;
-
-    npc->yaw = atan2(posX, posZ, temp_f22, temp_f20);
-    npc_move_heading(npc, npc->moveSpeed, npc->yaw);
-
-    posX = npc->pos.x;
-    posY = npc->pos.y + (*(enemy->territory->patrol.points + script->functionTemp[2])).y;
-    posZ = npc->pos.z;
-    posW = 1000.0f;
-    npc_raycast_down_sides(npc->unk_80, &posX, &posY, &posZ, &posW);
-    posY += (*(enemy->territory->patrol.points + script->functionTemp[2])).y;
-    posW = posY - npc->pos.y;
-    if (posW > 2.0) {
-        npc->pos.y += 2.0;
-    } else if (posW < -2.0) {
-        npc->pos.y -= 2.0;
-    } else {
-        npc->pos.y = posY;
-    }
-
-    posW = dist2D(npc->pos.x, npc->pos.z, temp_f22, temp_f20);
-    if (!(posW > npc->moveSpeed)) {
-        script->functionTemp[0] = 2;
-    }
-}
-
-void N(func_80241068_BDFDF8)(ScriptInstance* script, NpcAISettings* aiSettings, EnemyTerritoryThing* territory) {
-    Enemy* enemy = script->owner1.enemy;
-    Npc* npc = get_npc_unsafe(enemy->npcID);
-
-    npc->duration--;
-    if (npc->duration < 0) {
-        script->functionTemp[1]--;
-        if (script->functionTemp[1] >= 0) {
-            npc->yaw = clamp_angle(npc->yaw + 180.0f);
-            npc->duration = aiSettings->waitTime / 2 + rand_int(aiSettings->waitTime / 2 + 1);
-        } else {
-            script->functionTemp[0] = 4;
-            npc->currentAnim.w = enemy->animList[0];
-        }
-    }
-}
-
-ApiStatus N(func_8024113C_BDFECC)(ScriptInstance* script, s32 isInitialCall) {
-    Enemy* enemy = script->owner1.enemy;
-    Bytecode* args = script->ptrReadPos;
-    Npc* npc = get_npc_unsafe(enemy->npcID);
-    EnemyTerritoryThing territory;
-    EnemyTerritoryThing* territoryPtr = &territory;
-    NpcAISettings* npcAISettings = (NpcAISettings*)get_variable(script, *args++);
-
-    territory.unk_00 = 0;
-    territory.shape = enemy->territory->patrol.detectShape;
-    territory.pointX = enemy->territory->patrol.detect.x;
-    territory.pointZ = enemy->territory->patrol.detect.z;
-    territory.sizeX = enemy->territory->patrol.detectSizeX;
-    territory.sizeZ = enemy->territory->patrol.detectSizeZ;
-    territory.unk_18 = 100.0f;
-    territory.unk_1C = 0;
-
-    if (isInitialCall) {
-        script->functionTemp[0] = 0;
-        npc->duration = 0;
-        npc->flags &= ~0x800;
-    }
-
-    switch (script->functionTemp[0]) {
-        case 0:
-            N(UnkNpcAIFunc24)(script, npcAISettings, territoryPtr);
-        case 1:
-            N(func_80240E90_BDFC20)(script, npcAISettings, territoryPtr);
-            break;
-        case 2:
-            N(UnkNpcAIFunc1)(script, npcAISettings, territoryPtr);
-        case 3:
-            N(func_80241068_BDFDF8)(script, npcAISettings, territoryPtr);
-            break;
-        case 4:
-            N(UnkNpcAIFunc25)(script, npcAISettings, territoryPtr);
-            break;
-    }
-
-    enemy->varTable[0] = npc->pos.y;
-    return ApiStatus_BLOCK;
-}
-
-/// Pushes/pops script local variables to D_80241C68_BE09F8
-ApiStatus N(func_802412B0_BE0040)(ScriptInstance* script, s32 isInitialCall) {
-    s32 i;
-
-    if (N(D_80241C68_BE09F8) == NULL) {
-        N(D_80241C68_BE09F8) = heap_malloc(16 * sizeof(s32));
-        for (i = 0; i < 16; i++) {
-            N(D_80241C68_BE09F8)[i] = script->varTable[i];
-        }
-    } else {
-        for (i = 0; i < 16; i++) {
-            script->varTable[i] = N(D_80241C68_BE09F8)[i];
-        }
-        heap_free(N(D_80241C68_BE09F8));
-        N(D_80241C68_BE09F8) = NULL;
-    }
-    return ApiStatus_DONE2;
-}
 
 #include "world/common/GetItemName.inc.c"
 
@@ -1084,7 +1065,7 @@ ApiStatus N(func_802412B0_BE0040)(ScriptInstance* script, s32 isInitialCall) {
 
 #include "world/common/AddPlayerHandsOffset.inc.c"
 
-ApiStatus N(func_802415F4_BE0384)(ScriptInstance* script, s32 isInitialCall) {
+ApiStatus N(func_802415F4_BE0384)(Evt* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
     s32* ptr;
 
@@ -1104,7 +1085,7 @@ ApiStatus N(func_802415F4_BE0384)(ScriptInstance* script, s32 isInitialCall) {
     return ApiStatus_BLOCK;
 }
 
-ApiStatus N(func_80241648_BE03D8)(ScriptInstance* script, s32 isInitialCall) {
+ApiStatus N(func_80241648_BE03D8)(Evt* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
 
     N(D_80241CD0_BE0A60) = get_variable(script, *args);
@@ -1112,7 +1093,7 @@ ApiStatus N(func_80241648_BE03D8)(ScriptInstance* script, s32 isInitialCall) {
     return ApiStatus_DONE2;
 }
 
-ApiStatus N(func_80241680_BE0410)(ScriptInstance* script, s32 isInitialCall) {
+ApiStatus N(func_80241680_BE0410)(Evt* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
     s32* ptr = get_variable(script, *args);
     s32 i;
